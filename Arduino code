@@ -1,0 +1,238 @@
+// Include the servo library:
+#include <Servo.h>
+
+// Create a new servo object:
+Servo armservo;
+Servo lidservo;
+
+// Define the servo pin:
+#define armPin 9
+#define lidPin 8
+
+//set variable for the pin for the switch 
+
+int switchpin = 10;
+int action = 1;
+
+void setup() {
+  // Attach the Servo variable to a pin:
+  
+  armservo.attach(armPin);
+  lidservo.attach(lidPin);
+  pinMode(switchpin,INPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
+  
+  
+  // set starting positions 
+  lidservo.write(90);
+  armservo.write(0);
+}
+
+void loop() {
+  if (digitalRead(switchpin) == LOW)
+  {
+  digitalWrite(LED_BUILTIN, HIGH);
+    if (action > 8) {
+      action = 1;
+    }  
+    if (action == 1) {
+      action1();
+    }
+    else if (action == 2) {
+      action2();
+    }
+    else if (action == 3) {
+      action3();
+    }
+    else if (action == 4) {
+      action4();
+    }
+    else if (action == 5) {
+      action5();
+    }
+    else if (action == 6) {
+      action6();
+    }
+    else if (action == 7) {
+      action7();
+    }
+    else if (action == 8) {
+      action8();
+    }
+    action += 1;
+  }
+}
+ 
+ 
+ 
+
+void action1() {
+    //lid open
+    lidservo.write(135);
+    delay(1000);
+   //arm move to switch 
+   armservo.write(160);
+   digitalWrite(LED_BUILTIN, LOW);
+   delay(500);
+    //arm move back
+   armservo.write(0);
+    delay(1000);
+   //lid close
+    lidservo.write(90);
+}
+ 
+void action2() {
+   //==========================================================barely misses
+  //lid open
+    lidservo.write(135);
+    delay(1000);
+   //arm move to switch 
+   armservo.write(150);
+   delay(500);
+    //arm move back
+   armservo.write(0);
+    delay(1000);
+   //lid close
+    lidservo.write(90);
+   delay(1000);
+   //actually hits
+    lidservo.write(135);
+    delay(1000);
+   //arm move to switch 
+   armservo.write(160);
+   delay(500);
+    //arm move back
+   armservo.write(0);
+    delay(1000);
+   //lid close
+    lidservo.write(90);
+}
+void action3() {
+  //=========================================================================lid freak out
+    lidservo.write(120);
+    delay(1000);
+    lidservo.write(90);
+    delay(1000);
+    
+    lidservo.write(120);
+    delay(1000);
+    lidservo.write(90);
+    delay(1000);
+    
+    lidservo.write(120);
+    delay(1000);
+    lidservo.write(90);
+    delay(1000);
+    //actually hit
+    //lid open
+    lidservo.write(135);
+    delay(1000);
+   //arm move to switch 
+   armservo.write(160);
+   delay(500);
+    //arm move back
+   armservo.write(0);
+    delay(1000);
+   //lid close
+    lidservo.write(90);
+}
+void action4() {
+  //===============================================teaser
+  lidservo.write(135);
+  delay(1000);
+  armservo.write(140);
+  delay(4000);
+  armservo.write(160);
+  armservo.write(0);
+  delay(1000);
+  lidservo.write(90);
+}
+void action5() {
+  //========================================Stagger RETREAT
+    //lid open
+    lidservo.write(135);
+    delay(1000);
+   //arm move to switch 
+   armservo.write(160);
+   delay(200);
+   armservo.write(150);
+   delay(200);
+  armservo.write(140);
+   delay(200);
+   armservo.write(130);
+   delay(200);
+  armservo.write(120);
+   delay(200);
+   armservo.write(110);
+   delay(200);
+    //arm move back
+   armservo.write(0);
+    delay(1000);
+   //lid close
+    lidservo.write(90);
+
+}
+void action6() {
+  //=========================================================arm freak out
+    //lid open
+    lidservo.write(135);
+    delay(1000);
+   //arm move to switch 
+   armservo.write(150);
+
+    //arm move back
+   armservo.write(0);
+    delay(300);
+    armservo.write(150);
+
+    //arm move back
+   armservo.write(0);
+    delay(300);
+    armservo.write(150);
+
+    //arm move back
+   armservo.write(0);
+    delay(300);
+    armservo.write(160);
+    delay(500);
+    //arm move back
+   armservo.write(0);
+    delay(1000);
+   //lid close
+    lidservo.write(90);
+}
+void action7() {
+  // ============================================================FAST
+    //lid open
+    lidservo.write(135);
+    delay(500);
+   //arm move to switch 
+   armservo.write(160);
+   delay(100);
+    //arm move back
+   armservo.write(0);
+    delay(400);
+   //lid close
+    lidservo.write(90);
+}
+void action8() {
+  //=============================================================out out out fast
+    //lid open
+    lidservo.write(135);
+    delay(1000);
+   armservo.write(130);
+   delay(500);
+   armservo.write(140);
+   delay(500);
+   armservo.write(150);
+   delay(500);   
+   //arm move to switch 
+   armservo.write(160);
+   delay(500);
+    //arm move back
+   armservo.write(0);
+    delay(1000);
+   //lid close
+    lidservo.write(90);
+   delay(1000);
+}
