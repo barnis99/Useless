@@ -1,0 +1,48 @@
+name: Book Reservation
+
+on:
+  schedule:
+    - cron: '0 17 * * *'  # 10:00 AM PDT (UTC-7) — change to '0 18 * * *' Nov-Mar (PST)
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Visit date override (M/D/YYYY) — leave blank for today+2 days'
+        required: false
+        default: ''
+
+jobs:
+  book:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install playwright python-dotenv
+          playwright install chromium --with-deps
+
+      - name: Run booking agent
+        env:
+          RECGOV_EMAIL: ${{ secrets.RECGOV_EMAIL }}
+          RECGOV_PASSWORD: ${{ secrets.RECGOV_PASSWORD }}
+        run: |
+          ARGS="--now"
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            ARGS="$ARGS --date '${{ github.event.inputs.date }}'"
+          fi
+          python3 book.py $ARGS
+        working-directory: reservation_agent
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: booking-screenshots
+          path: reservation_agent/*.png
+          if-no-files-found: ignore
