@@ -1,0 +1,12 @@
+# Credentials — never commit these
+reservation_agent/.env
+
+# Screenshots saved by the agent
+*.png
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
