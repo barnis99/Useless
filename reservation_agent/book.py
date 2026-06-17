@@ -137,14 +137,35 @@ def load_env():
 
 def login(page, email: str, password: str):
     log.info("Navigating to recreation.gov…")
-    page.goto("https://www.recreation.gov", wait_until="domcontentloaded", timeout=30_000)
+    page.goto("https://www.recreation.gov", wait_until="networkidle", timeout=45_000)
+    page.screenshot(path="homepage.png")
+    log.info("Homepage loaded. Looking for Sign In…")
 
-    # Click the Sign In button
-    try:
-        page.click("text=Sign In", timeout=8_000)
-    except PWTimeout:
-        # Try the header link pattern
-        page.click("[data-component='login-button'], a[href*='signin'], button:has-text('Sign In')", timeout=8_000)
+    # Try every known Sign In selector in order
+    sign_in_selectors = [
+        "text=Sign In",
+        "text=Log In",
+        "a[href*='signin']",
+        "a[href*='login']",
+        "button:has-text('Sign In')",
+        "button:has-text('Log In')",
+        "[data-component='login-button']",
+        "[aria-label*='Sign In']",
+        "[aria-label*='Log In']",
+    ]
+    clicked = False
+    for sel in sign_in_selectors:
+        try:
+            page.click(sel, timeout=3_000)
+            log.info("Clicked Sign In via: %s", sel)
+            clicked = True
+            break
+        except PWTimeout:
+            continue
+
+    if not clicked:
+        page.screenshot(path="signin_not_found.png")
+        raise RuntimeError("Could not find Sign In button — see signin_not_found.png")
 
     page.wait_for_selector("input[name='email'], input[type='email']", timeout=15_000)
     log.info("Filling in credentials…")
@@ -322,6 +343,7 @@ def run(skip_wait: bool, date_override: str | None, headless: bool):
                 log.info("Screenshot saved to error.png")
             except Exception:
                 pass
+            sys.exit(1)
         finally:
             browser.close()
 
