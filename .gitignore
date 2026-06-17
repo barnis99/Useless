@@ -1,5 +1,7 @@
 # Credentials — never commit these
 reservation_agent/.env
+web/.env.local
+web/.env*.local
 
 # Screenshots saved by the agent
 *.png
