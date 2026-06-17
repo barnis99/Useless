@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Booking Agent</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: #f2f2f7;
+      min-height: 100svh;
+      padding: 28px 16px 52px;
+      color: #1c1c1e;
+    }
+
+    .wrap { max-width: 390px; margin: 0 auto; }
+
+    h1 { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 3px; }
+    .sub { font-size: 13px; color: #8e8e93; text-align: center; margin-bottom: 24px; }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+    }
+
+    .label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: #8e8e93;
+      margin-bottom: 5px;
+    }
+
+    .value { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+    .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .grid2 .card { margin-bottom: 0; text-align: center; }
+    .grid2 .value { font-size: 16px; }
+
+    .date-card { text-align: center; }
+    .date-card .value { font-size: 30px; color: #007aff; }
+    .date-sub { font-size: 12px; color: #8e8e93; margin-top: 3px; }
+
+    .btn {
+      display: block; width: 100%;
+      padding: 18px; border-radius: 16px; border: none;
+      font-size: 18px; font-weight: 700; cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      margin-bottom: 12px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-blue { background: #007aff; color: #fff; }
+    .btn-blue:disabled { background: #c7c7cc; cursor: default; }
+    .btn-gray { background: #e5e5ea; color: #1c1c1e; font-size: 15px; padding: 14px; }
+
+    /* status pill */
+    .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .pill {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 99px; letter-spacing: .05em;
+    }
+    .p-idle    { background: #e5e5ea; color: #8e8e93; }
+    .p-queued  { background: #fff3cd; color: #856404; }
+    .p-run     { background: #fff3cd; color: #856404; }
+    .p-ok      { background: #d4edda; color: #155724; }
+    .p-fail    { background: #f8d7da; color: #721c24; }
+
+    .status-msg  { font-size: 14px; color: #3a3a3c; }
+    .status-time { font-size: 12px; color: #8e8e93; }
+
+    .log-link {
+      display: flex; align-items: center; justify-content: space-between;
+      text-decoration: none; color: #007aff; font-size: 15px; font-weight: 500;
+    }
+
+    /* modal */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.45);
+      display: flex; align-items: flex-end;
+      z-index: 50;
+    }
+    .sheet {
+      background: #fff; border-radius: 20px 20px 0 0;
+      padding: 28px 20px 44px; width: 100%;
+    }
+    .sheet h2 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .sheet p  { font-size: 14px; color: #3a3a3c; line-height: 1.55; margin-bottom: 16px; }
+    .sheet a  { color: #007aff; }
+    .inp {
+      width: 100%; padding: 14px; border-radius: 12px;
+      border: 1.5px solid #d1d1d6; font-size: 14px;
+      font-family: monospace; margin-bottom: 12px; outline: none;
+    }
+    .inp:focus { border-color: #007aff; }
+    .hidden { display: none !important; }
+
+    .amber { color: #ff9500; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Booking Agent</h1>
+  <p class="sub">recreation.gov &middot; facility 253731 &middot; ticket 255</p>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="label">PT Time</div>
+      <div class="value" id="pt-time">--:--:--</div>
+    </div>
+    <div class="card">
+      <div class="label">10 AM in</div>
+      <div class="value amber" id="countdown">--h --m --s</div>
+    </div>
+  </div>
+
+  <div class="card date-card">
+    <div class="label">Target Visit Date</div>
+    <div class="value" id="visit-date">--/--/----</div>
+    <div class="date-sub">2 days from today (PT)</div>
+  </div>
+
+  <button class="btn btn-blue" id="run-btn" onclick="handleRun()">Run Now</button>
+
+  <div class="card" id="status-card">
+    <div class="row">
+      <span class="pill p-idle" id="status-pill">IDLE</span>
+      <span class="status-time" id="status-time"></span>
+    </div>
+    <div class="status-msg" id="status-msg">No runs yet.</div>
+  </div>
+
+  <div class="card hidden" id="log-card">
+    <div class="label" style="margin-bottom:10px">Latest Run</div>
+    <a class="log-link" id="log-link" href="#" target="_blank">View full logs on GitHub <span>&rarr;</span></a>
+  </div>
+
+  <button class="btn btn-gray" onclick="showModal()">Set GitHub Token</button>
+
+</div>
+
+<!-- Token sheet -->
+<div class="overlay hidden" id="overlay">
+  <div class="sheet">
+    <h2>GitHub Token</h2>
+    <p>
+      A token with <strong>workflow</strong> scope is needed to trigger bookings.<br><br>
+      <a href="https://github.com/settings/tokens/new?scopes=workflow&description=booking-agent" target="_blank">
+        Tap here to create one on GitHub &rarr;
+      </a>
+    </p>
+    <input class="inp" type="password" id="tok-input" placeholder="ghp_&hellip;" autocomplete="off" />
+    <button class="btn btn-blue" onclick="saveToken()">Save &amp; Continue</button>
+  </div>
+</div>
+
+<script>
+  const REPO     = 'barnis99/Useless';
+  const WORKFLOW = 'book.yml';
+  const GH       = 'https://api.github.com';
+
+  let token = localStorage.getItem('gh_token') || '';
+  let poll;
+
+  // ── Clock ────────────────────────────────────────────────────────────────
+
+  function ptNow() {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+  }
+
+  function tick() {
+    const now = new Date();
+    document.getElementById('pt-time').textContent =
+      now.toLocaleTimeString('en-US', {
+        timeZone: 'America/Los_Angeles',
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+      });
+
+    const pt   = ptNow();
+    const next = new Date(pt); next.setHours(10, 0, 0, 0);
+    if (pt >= next) next.setDate(next.getDate() + 1);
+    const ms = next - pt;
+    const h  = Math.floor(ms / 3600000);
+    const m  = Math.floor((ms % 3600000) / 60000);
+    const s  = Math.floor((ms % 60000)   / 1000);
+    document.getElementById('countdown').textContent =
+      `${h}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s`;
+
+    const d = ptNow(); d.setDate(d.getDate() + 2);
+    document.getElementById('visit-date').textContent =
+      `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+  }
+
+  setInterval(tick, 1000);
+  tick();
+
+  // ── GitHub API ───────────────────────────────────────────────────────────
+
+  async function gh(path, opts = {}) {
+    const h = { Accept: 'application/vnd.github+json', ...opts.headers };
+    if (token) h.Authorization = `Bearer ${token}`;
+    return fetch(`${GH}${path}`, { ...opts, headers: h });
+  }
+
+  async function getLatestRun() {
+    const r = await gh(`/repos/${REPO}/actions/workflows/${WORKFLOW}/runs?per_page=1`);
+    if (!r.ok) return null;
+    return (await r.json()).workflow_runs?.[0] ?? null;
+  }
+
+  async function dispatch() {
+    const r = await gh(`/repos/${REPO}/actions/workflows/${WORKFLOW}/dispatches`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ref: 'main' }),
+    });
+    return r.status === 204;
+  }
+
+  // ── Status display ───────────────────────────────────────────────────────
+
+  const PILL = {
+    queued:      ['p-queued', 'QUEUED'],
+    in_progress: ['p-run',    'RUNNING'],
+    success:     ['p-ok',     'SUCCESS'],
+    failure:     ['p-fail',   'FAILED'],
+    cancelled:   ['p-idle',   'CANCELLED'],
+  };
+
+  function renderRun(run) {
+    const pill    = document.getElementById('status-pill');
+    const msg     = document.getElementById('status-msg');
+    const timeEl  = document.getElementById('status-time');
+    const logCard = document.getElementById('log-card');
+    const logLink = document.getElementById('log-link');
+    const btn     = document.getElementById('run-btn');
+
+    if (!run) {
+      pill.className = 'pill p-idle'; pill.textContent = 'IDLE';
+      msg.textContent = 'No runs yet.'; timeEl.textContent = '';
+      logCard.classList.add('hidden');
+      btn.disabled = false; btn.textContent = 'Run Now';
+      return;
+    }
+
+    const key = run.status === 'completed' ? run.conclusion : run.status;
+    const [cls, label] = PILL[key] || ['p-idle', key.toUpperCase()];
+    pill.className = `pill ${cls}`; pill.textContent = label;
+    timeEl.textContent = new Date(run.updated_at).toLocaleTimeString();
+
+    if (run.status === 'completed') {
+      msg.textContent = run.conclusion === 'success'
+        ? 'Booked successfully! Check your email.'
+        : 'Run failed — tap to view logs.';
+    } else {
+      msg.textContent = 'Booking in progress…';
+    }
+
+    logCard.classList.remove('hidden');
+    logLink.href = run.html_url;
+
+    const busy = run.status !== 'completed';
+    btn.disabled = busy;
+    btn.textContent = busy ? 'Booking in progress…' : 'Run Now';
+  }
+
+  async function pollStatus() {
+    clearTimeout(poll);
+    try {
+      renderRun(await getLatestRun());
+    } catch (_) {}
+    const run = await getLatestRun().catch(() => null);
+    const interval = run && run.status !== 'completed' ? 4000 : 15000;
+    poll = setTimeout(pollStatus, interval);
+  }
+
+  pollStatus();
+
+  // ── Run Now ──────────────────────────────────────────────────────────────
+
+  async function handleRun() {
+    if (!token) { showModal(); return; }
+    const btn = document.getElementById('run-btn');
+    btn.disabled = true; btn.textContent = 'Triggering…';
+    const ok = await dispatch().catch(() => false);
+    if (!ok) {
+      btn.disabled = false; btn.textContent = 'Run Now';
+      alert('Could not trigger — make sure the token has "workflow" scope.');
+      return;
+    }
+    btn.textContent = 'Booking in progress…';
+    setTimeout(pollStatus, 3000);
+  }
+
+  // ── Token modal ──────────────────────────────────────────────────────────
+
+  function showModal() {
+    document.getElementById('tok-input').value = token;
+    document.getElementById('overlay').classList.remove('hidden');
+  }
+
+  function saveToken() {
+    const v = document.getElementById('tok-input').value.trim();
+    if (v) { token = v; localStorage.setItem('gh_token', v); }
+    document.getElementById('overlay').classList.add('hidden');
+  }
+
+  document.getElementById('overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) saveToken();
+  });
+
+  if (!token) showModal();
+</script>
+</body>
+</html>
