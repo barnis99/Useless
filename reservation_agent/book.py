@@ -137,7 +137,7 @@ def load_env():
 
 def login(page, email: str, password: str):
     log.info("Navigating to recreation.gov…")
-    page.goto("https://www.recreation.gov", wait_until="networkidle", timeout=45_000)
+    page.goto("https://www.recreation.gov", wait_until="domcontentloaded", timeout=45_000)
     page.screenshot(path="homepage.png")
     log.info("Homepage loaded. Looking for Sign In…")
 
